@@ -18,7 +18,11 @@ M = rowSize
 
 metric = pd.DataFrame(np.zeros((3, 8)), columns=['ori', 'con0', 'con01','con001','uni01','lap01','uni001','lap001'], index=['Avg', 'MAE', 'VAE'])
 
+# Jensen–Shannon divergence
+
 jsdist = pd.Series(np.zeros(7))
+
+# Linear query
 
 lin1 = pd.DataFrame(np.zeros((colSize,8)), columns=['ori', 'Con0','Con01','Con001','uni01','lap01','uni001','lap001'])
 lin2 = pd.DataFrame(np.zeros((colSize,8)), columns=['ori', 'Con0','Con01','Con001','uni01','lap01','uni001','lap001'])
@@ -31,8 +35,19 @@ for _ in range(iter):
     print("iteration: ", _+1)
 
 
-
+    
+'''
+Original
+Conventional
+Proposed (Uniform)
+Proposed (Laplace)
+'''
+    # Uniform distribution -> synthetic data
     df1 = pd.DataFrame(np.random.uniform(0,1,(colSize, rowSize)))
+
+    # Gaussian distribution -> synthetic data
+    #df1 = pd.DataFrame(np.random.normal(0.5, 0.1, (colSize,rowSize)))
+
     df2 = pd.DataFrame(np.zeros((colSize, rowSize)))
     df3 = pd.DataFrame(np.zeros((colSize, rowSize)))
     df4 = pd.DataFrame(np.zeros((colSize, rowSize)))
@@ -44,9 +59,7 @@ for _ in range(iter):
 
     noise = pd.DataFrame(np.zeros((colSize, rowSize)))
 
-    # normal
-    #df1 = pd.DataFrame(np.random.normal(0.5, 0.1, (colSize,rowSize)))
-
+    # perturbation 
 
     for j in range(N):
         for i in range(M):
@@ -118,6 +131,8 @@ for _ in range(iter):
                 dist += abs(df1[i][j]-df8[i][j])
 
 
+    # compute JS distance
+
     js_con0 = list(distance.jensenshannon(df1, df2,axis=1))
     js_con01 = list(distance.jensenshannon(df1, df3,axis=1))
     js_con001 = list(distance.jensenshannon(df1, df4,axis=1))
@@ -135,9 +150,12 @@ for _ in range(iter):
 
     # if two distributions are the same, the Jensen-Shannon distance between them is 0.
 
+    # Statistics
     metric.loc['Avg'] += (np.average(df1), np.average(df2), np.average(df3),np.average(df4),np.average(df5),np.average(df6),np.average(df7),np.average(df8))
     metric.loc['MAE'] += (0, np.average(abs(df1-df2)), np.average(abs(df1-df3)),np.average(abs(df1-df4)),np.average(abs(df1-df5)),np.average(abs(df1-df6)),np.average(abs(df1-df7)),np.average(abs(df1-df8)))
     metric.loc['VAE'] += (0, (df1 - df2).abs().var().mean(),(df1 - df3).abs().var().mean(),(df1 - df4).abs().var().mean(),(df1 - df5).abs().var().mean(),(df1 - df6).abs().var().mean(),(df1 - df7).abs().var().mean(),(df1 - df8).abs().var().mean())
+
+    # Linear query
     simplesum = pd.Series(np.ones(rowSize))
     oddsum = pd.Series(np.ones(rowSize))
     increasesum = pd.Series(np.arange(1,rowSize+1))
@@ -151,6 +169,7 @@ for _ in range(iter):
     lin2 += pd.concat([df1.dot(oddsum),df2.dot(oddsum),df3.dot(oddsum),df4.dot(oddsum),df5.dot(oddsum),df6.dot(oddsum),df7.dot(oddsum),df8.dot(oddsum)], axis= 1, keys=['ori', 'Con0','Con01','Con001','uni01','lap01','uni001','lap001'])
     lin3 += pd.concat([df1.dot(increasesum),df2.dot(increasesum),df3.dot(increasesum),df4.dot(increasesum),df5.dot(increasesum),df6.dot(increasesum),df7.dot(increasesum),df8.dot(increasesum)], axis= 1, keys=['ori', 'Con0','Con01','Con001','uni01','lap01','uni001','lap001'])
     lin4 += pd.concat([df1.dot(increaseoddsum),df2.dot(increaseoddsum),df3.dot(increaseoddsum),df4.dot(increaseoddsum),df5.dot(increaseoddsum),df6.dot(increaseoddsum),df7.dot(increaseoddsum),df8.dot(increaseoddsum)], axis= 1, keys=['ori', 'Con0','Con01','Con001','uni01','lap01','uni001','lap001'])
+
 # average result
 
 pd.options.display.float_format = '{:.8f}'.format
